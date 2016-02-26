@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="80dp"
+    android:background="#ffebeff1"
+    android:orientation="horizontal" >
+
+    <!--RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:padding="8dp"
+        android:background="#ffffeb3b"
+        android:id="@+id/shareview"
+        android:orientation="horizontal" >
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_share_24dp"/>
+    </RelativeLayout-->
+
+
+<!--View shown on swiping mainLayout-->
+    <RelativeLayout
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:padding="8dp"
+        android:background="@android:color/holo_red_dark"
+        android:id="@+id/deleteview"
+        android:orientation="horizontal" >
+
+        <ImageView
+            android:id="@+id/delete_button"
+            android:padding="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/ic_delete_24dp"
+            android:layout_marginRight="10dp"
+            android:layout_centerVertical="true"/>
+
+    </RelativeLayout>
+
+<!--MainView-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:padding="8dp"
+        android:weightSum="1"
+        android:background="#ffebeff1"
+        android:id="@+id/mainview"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:id="@+id/planet_name"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"/>
+
+    </LinearLayout>
+
+</RelativeLayout>
