@@ -182,7 +182,7 @@ public class Adapter
                     Log.i("deltaX", deltaX + "");
 
                     //lock other listeners
-                    if (listView != null && !motionInterceptDisallowed) {
+                    if (deltaX>MIN_LOCK_DISTANCE&&listView != null && !motionInterceptDisallowed) {
                         listView.requestDisallowInterceptTouchEvent(true);
                         motionInterceptDisallowed = true;
                     }
@@ -240,6 +240,12 @@ public class Adapter
                     Log.i("cancel delta", deltaX + "");
 
                     setStateOfBackgroundLayout((int) deltaX, v);
+
+                    //active other listeners
+                    if (listView != null) {
+                        listView.requestDisallowInterceptTouchEvent(false);
+                        motionInterceptDisallowed = false;
+                    }
 
                     return false;
             }
