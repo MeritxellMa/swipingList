@@ -46,7 +46,7 @@ public class Adapter
         //get views
         final PlanetHolder holder = getPlanetHolder(workingView);
         final String entry = getItem(position);
-
+        listView = (ListView) parent;
 
         //set init components
         holder.name.setText(entry);
@@ -61,7 +61,7 @@ public class Adapter
         holder.mainLayout.setLayoutParams(params);
 
         //set SwipeDetector(class below)
-        workingView.setOnTouchListener(new SwipeDetector(holder, position));
+        workingView.setOnTouchListener(new SwipeDetector(holder, listView));
 
         //set delete listener
         holder.deleteButton.setTag(position);
@@ -106,7 +106,6 @@ public class Adapter
             //button to click when background layout is displayed
             holder.deleteButton = (ImageView) workingView.findViewById(R.id.delete_button);
 
-
             //other views
             holder.name = (TextView) workingView.findViewById(R.id.planet_name);
             /* other views here */
@@ -124,9 +123,9 @@ public class Adapter
     public static class PlanetHolder {
         public LinearLayout mainLayout;
         public RelativeLayout deleteLayout;
-        public TextView name;
         public ImageView deleteButton;
 
+        public TextView name;
         /* other views here */
     }
 
@@ -142,12 +141,12 @@ public class Adapter
         private float downX, upX; //initial and final points
         private int rightMargin; // right margin of mainLayout
         private PlanetHolder holder;
-        private int position;   //view position
+        private ListView listView;
 
 
-        public SwipeDetector(PlanetHolder h, int pos) {
+        public SwipeDetector(PlanetHolder h, ListView listView) {
             holder = h;
-            position = pos;
+            this.listView = listView;
         }
 
 
@@ -188,23 +187,25 @@ public class Adapter
                         motionInterceptDisallowed = true;
                     }
 
-                    //set background layout visibility
+                    //hide other items and show selected item
+                    for (int i = 0; i < listView.getCount(); i++) {
+                        if (i != listView.getSelectedItemPosition()) {
+                            updateView(i);
+                        }
+                    }
                     holder.deleteLayout.setVisibility(View.VISIBLE);
 
                     //swipe
                     if (deltaX > MAX_LOCK_DISTANCE) {
                         //lock when MAX_LOCK_DISTANCE is reached
-                        swipeLeft(-MAX_LOCK_DISTANCE);
+                        swipeLeft(-MAX_LOCK_DISTANCE, holder.mainLayout);
                     } else if (rightMargin == 0 && deltaX < 0) {
                         //don't swipe right if background layout is not shown
-                        swipeLeft(0);
+                        swipeLeft(0, holder.mainLayout);
+                    } else if (deltaX > 0) {
+                        swipeLeft(-(int) deltaX, holder.mainLayout);
                     } else {
-                        //swipe left/right
-                        if (deltaX > 0) {
-                            swipeLeft(-(int) deltaX);
-                        } else {
-                            swipeRight((int) deltaX);
-                        }
+                        swipeRight((int) deltaX);
                     }
 
                     return true;
@@ -253,19 +254,20 @@ public class Adapter
          * @param v
          */
         private void setStateOfBackgroundLayout(int distance, View v) {
-            if (distance == 0) {
-                //sigle click, call onClickListener of the selected view
+            if (distance == 0 && rightMargin == 0) {
+                //single click, call onClickListener of the selected view
                 holder.deleteLayout.setVisibility(View.GONE);
                 v.performClick();
             } else if (distance < MIN_LOCK_DISTANCE) {
                 //do not show background layout when MIN_LOCK_DISTANCE is not reached
-                swipeLeft(0);
-                //disallow deletebutton
+                swipeLeft(0, holder.mainLayout);
+                //disallow deleteButton
                 holder.deleteLayout.setVisibility(View.GONE);
             } else if (holder.deleteLayout.isShown()) {
-                //deleteLayout is completely shown when trying to drag it out
-                swipeLeft(-MAX_LOCK_DISTANCE);
+                //deleteLayout is shown when trying to drag it out
+                swipeLeft(-MAX_LOCK_DISTANCE, holder.mainLayout);
             }
+
         }
 
         /**
@@ -281,17 +283,36 @@ public class Adapter
         }
 
         /**
-         * Adds right margin
+         * Adds right margin and deletes left margin
          *
          * @param distance
          */
-        private void swipeLeft(int distance) {
-            View animationView = holder.mainLayout;
+        private void swipeLeft(int distance, View animationView) {
+            //View animationView = holder.mainLayout;
             RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) animationView.getLayoutParams();
             params.rightMargin = -distance;
             params.leftMargin = distance;
             animationView.setLayoutParams(params);
         }
 
+        /**
+         * hide background view if it is shown
+         *
+         * @param index
+         */
+        private void updateView(int index) {
+            View v = listView.getChildAt(index -
+                    listView.getFirstVisiblePosition());
+
+            if (v == null)
+                return;
+
+            RelativeLayout deleteLayout = (RelativeLayout) v.findViewById(R.id.deleteview);
+            if (deleteLayout.isShown()) {
+                LinearLayout mainLayout = (LinearLayout) v.findViewById(R.id.mainview);
+                swipeLeft(0, mainLayout);
+                deleteLayout.setVisibility(View.GONE);
+            }
+        }
     }
 }
