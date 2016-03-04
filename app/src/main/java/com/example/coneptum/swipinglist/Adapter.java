@@ -1,6 +1,7 @@
 package com.example.coneptum.swipinglist;
 
 import android.content.Context;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -22,8 +23,7 @@ public class Adapter
     //variables
     private int layoutResource;
     private LayoutInflater inflater;
-    //views
-    private ListView listView;
+
 
     public Adapter(Context con, int resource, ArrayList<String> items) {
         super(con, resource, items);
@@ -46,7 +46,7 @@ public class Adapter
         //get views
         final PlanetHolder holder = getPlanetHolder(workingView);
         final String entry = getItem(position);
-        listView = (ListView) parent;
+        ListView listView = (ListView) parent;
 
         //set init components
         holder.name.setText(entry);
@@ -185,15 +185,17 @@ public class Adapter
                     Log.i("deltaX", deltaX + "");
 
                     //lock other listeners
-                    if (deltaX>MIN_LOCK_DISTANCE&&listView != null && !motionInterceptDisallowed) {
+                    if (deltaX > MIN_LOCK_DISTANCE && listView != null && !motionInterceptDisallowed) {
                         listView.requestDisallowInterceptTouchEvent(true);
                         motionInterceptDisallowed = true;
                     }
 
                     //hide other items and show selected item
-                    for (int i = 0; i < listView.getCount(); i++) {
-                        if (i != listView.getSelectedItemPosition()) {
-                            updateView(i);
+                    if (listView != null) {
+                        for (int i = 0; i < listView.getCount(); i++) {
+                            if (i != listView.getSelectedItemPosition()) {
+                                updateView(i);
+                            }
                         }
                     }
                     holder.deleteLayout.setVisibility(View.VISIBLE);
@@ -202,6 +204,9 @@ public class Adapter
                     if (deltaX > MAX_LOCK_DISTANCE) {
                         //lock when MAX_LOCK_DISTANCE is reached
                         swipeLeft(-MAX_LOCK_DISTANCE, holder.mainLayout);
+                    } else if (deltaX < -MAX_LOCK_DISTANCE) {
+                        //lock when normal position is reached
+                        swipeLeft(0, holder.mainLayout);
                     } else if (rightMargin == 0 && deltaX < 0) {
                         //don't swipe right if background layout is not shown
                         swipeLeft(0, holder.mainLayout);
@@ -246,7 +251,7 @@ public class Adapter
                     deltaX = downX - upX;
                     Log.i("cancel delta", deltaX + "");
                     deltaY = downY - upY;
-                    Log.i("up deltaY", deltaY + "");
+                    Log.i("cancel deltaY", deltaY + "");
 
                     //set background state: open or closed
                     setStateOfBackgroundLayout((int) deltaX, deltaY, v);
@@ -265,13 +270,14 @@ public class Adapter
 
         /**
          * Set background layout state: open or closed
+         *
          * @param distanceX swipe horizontal distance
          * @param distanceY swipe vertical distance
-         * @param v view to swipe
+         * @param v         view to swipe
          */
         private void setStateOfBackgroundLayout(int distanceX, float distanceY, View v) {
-            if (distanceX == 0 && rightMargin == 0 && distanceY == 0) {
-                //single click, call onClickListener of the selected view
+            if ((distanceX == 0 && distanceY == 0 || distanceX == downX && distanceY == downY) && rightMargin == 0) {
+                //single click, call onClickListener of selected view
                 holder.deleteLayout.setVisibility(View.GONE);
                 v.performClick();
             } else if (distanceX < MIN_LOCK_DISTANCE) {
@@ -283,7 +289,8 @@ public class Adapter
                 //deleteLayout is shown when trying to drag it out
                 swipeLeft(-MAX_LOCK_DISTANCE, holder.mainLayout);
             }
-
+            upY = 0;
+            upX = 0;
         }
 
         /**
@@ -295,12 +302,14 @@ public class Adapter
             View animationView = holder.mainLayout;
             RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) animationView.getLayoutParams();
             params.rightMargin = rightMargin + distance;
+            params.leftMargin = leftMargin - distance;
             animationView.setLayoutParams(params);
         }
 
         /**
          * Add right margin and deletes left margin of animationView
-         * @param distance swiping distance
+         *
+         * @param distance      swiping distance
          * @param animationView view to swipe
          */
         private void swipeLeft(int distance, View animationView) {
