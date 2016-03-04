@@ -71,8 +71,6 @@ public class Adapter
                 if (holder.deleteLayout.isShown()) {
                     remove(getItem((int) v.getTag()));
                     notifyDataSetChanged();
-                } else {
-                    v.performClick();
                 }
             }
         });
@@ -138,8 +136,8 @@ public class Adapter
 
         //variables
         private boolean motionInterceptDisallowed = false; //lock other listeners
-        private float downX, upX; //initial and final points
-        private int rightMargin; // right margin of mainLayout
+        private float downX, upX, downY, upY; //initial and final points
+        private int rightMargin, leftMargin; // right and left margin of mainLayout
         private PlanetHolder holder;
         private ListView listView;
 
@@ -161,10 +159,13 @@ public class Adapter
                     //initial point
                     downX = event.getX();
                     Log.i("downX", downX + "");
+                    downY = event.getY();
+                    Log.i("downY", downY + "");
 
                     //set rightMargin in case of needing (used on swipeRight method)
                     RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) holder.mainLayout.getLayoutParams();
                     rightMargin = params.rightMargin;
+                    leftMargin = params.leftMargin;
 
                     return true; // allow other events like Click to be processed
                 }
@@ -176,6 +177,8 @@ public class Adapter
                     //detected point
                     upX = event.getX();
                     Log.i("upX", upX + "");
+                    upY = event.getY();
+                    Log.i("upY", upY + "");
 
                     //distance between initial and detected point
                     float deltaX = downX - upX;
@@ -219,8 +222,12 @@ public class Adapter
                     float deltaX = downX - upX;
                     Log.i("up deltaX", deltaX + "");
 
+                    float deltaY = downY - upY;
+                    Log.i("up deltaY", deltaY + "");
+
                     //set background state: open or closed
-                    setStateOfBackgroundLayout((int) deltaX, v);
+                    setStateOfBackgroundLayout((int) deltaX, deltaY, v);
+
 
                     //active other listeners
                     if (listView != null) {
@@ -238,8 +245,11 @@ public class Adapter
                     //distance
                     deltaX = downX - upX;
                     Log.i("cancel delta", deltaX + "");
+                    deltaY = downY - upY;
+                    Log.i("up deltaY", deltaY + "");
 
-                    setStateOfBackgroundLayout((int) deltaX, v);
+                    //set background state: open or closed
+                    setStateOfBackgroundLayout((int) deltaX, deltaY, v);
 
                     //active other listeners
                     if (listView != null) {
@@ -255,16 +265,16 @@ public class Adapter
 
         /**
          * Set background layout state: open or closed
-         *
-         * @param distance
-         * @param v
+         * @param distanceX swipe horizontal distance
+         * @param distanceY swipe vertical distance
+         * @param v view to swipe
          */
-        private void setStateOfBackgroundLayout(int distance, View v) {
-            if (distance == 0 && rightMargin == 0) {
+        private void setStateOfBackgroundLayout(int distanceX, float distanceY, View v) {
+            if (distanceX == 0 && rightMargin == 0 && distanceY == 0) {
                 //single click, call onClickListener of the selected view
                 holder.deleteLayout.setVisibility(View.GONE);
                 v.performClick();
-            } else if (distance < MIN_LOCK_DISTANCE) {
+            } else if (distanceX < MIN_LOCK_DISTANCE) {
                 //do not show background layout when MIN_LOCK_DISTANCE is not reached
                 swipeLeft(0, holder.mainLayout);
                 //disallow deleteButton
@@ -279,7 +289,7 @@ public class Adapter
         /**
          * Deletes right margin
          *
-         * @param distance
+         * @param distance swiping distance
          */
         private void swipeRight(int distance) {
             View animationView = holder.mainLayout;
@@ -289,9 +299,9 @@ public class Adapter
         }
 
         /**
-         * Adds right margin and deletes left margin
-         *
-         * @param distance
+         * Add right margin and deletes left margin of animationView
+         * @param distance swiping distance
+         * @param animationView view to swipe
          */
         private void swipeLeft(int distance, View animationView) {
             //View animationView = holder.mainLayout;
@@ -304,7 +314,7 @@ public class Adapter
         /**
          * hide background view if it is shown
          *
-         * @param index
+         * @param index of the view to update
          */
         private void updateView(int index) {
             View v = listView.getChildAt(index -
