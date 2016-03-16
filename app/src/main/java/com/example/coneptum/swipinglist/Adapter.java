@@ -131,8 +131,9 @@ public class Adapter
     public class SwipeDetector implements View.OnTouchListener {
 
         //constants
-        private static final int MAX_LOCK_DISTANCE = 150; // max swiped distance
-        private static final int MIN_LOCK_DISTANCE = MAX_LOCK_DISTANCE / 5; //min swiped distance
+        private final int MAX_LOCK_DISTANCE; // max swiped distance
+        private final int MIN_LOCK_DISTANCE; //min swiped distance
+        private static final int MAX_DP_SWIPE=100;
 
         //variables
         private boolean motionInterceptDisallowed = false; //lock other listeners
@@ -145,6 +146,8 @@ public class Adapter
         public SwipeDetector(PlanetHolder h, ListView listView) {
             holder = h;
             this.listView = listView;
+            MAX_LOCK_DISTANCE = (int) (MAX_DP_SWIPE*(getContext().getResources().getDisplayMetrics().density));
+            MIN_LOCK_DISTANCE = MAX_LOCK_DISTANCE / 10;
         }
 
 
